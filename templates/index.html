@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Hill Climbing Iterativo</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Hill Climbing Iterativo</h1>
+        </header>
+
+        <section class="form-container">
+            <h2>Selecciona y agrega ciudades</h2>
+            <div class="form-group">
+                <label for="ciudad_predefinida">Ciudad Predefinida</label>
+                <select id="ciudad_predefinida" onchange="cargarCoordenadas()">
+                    <option value="">-- Selecciona una ciudad --</option>
+                    <option value="Jiloyork">Jiloyork</option>
+                    <option value="Toluca">Toluca</option>
+                    <option value="Atlacomulco">Atlacomulco</option>
+                    <option value="Guadalajara">Guadalajara</option>
+                    <option value="Monterrey">Monterrey</option>
+                    <option value="QuintanaRoo">QuintanaRoo</option>
+                    <option value="Michoacan">Michoacan</option>
+                    <option value="Aguascalientes">Aguascalientes</option>
+                    <option value="CDMX">CDMX</option>
+                    <option value="QRO">QRO</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="nombre">Nombre de la ciudad</label>
+                <input type="text" id="nombre" placeholder="Nombre de la ciudad">
+            </div>
+
+            <div class="form-group">
+                <label for="lat">Latitud</label>
+                <input type="number" id="lat" placeholder="Latitud" step="any">
+            </div>
+
+            <div class="form-group">
+                <label for="lon">Longitud</label>
+                <input type="number" id="lon" placeholder="Longitud" step="any">
+            </div>
+
+            <button class="btn" onclick="agregarCiudad()">Agregar Ciudad</button>
+        </section>
+
+        <section class="cities-list">
+            <h3>Ciudades agregadas:</h3>
+            <ul id="lista"></ul>
+        </section>
+
+        <section class="result">
+            <button class="btn" onclick="calcularRuta()">Calcular Ruta</button>
+            <div id="resultado"></div>
+        </section>
+    </div>
+
+    <script>
+        let ciudades = {};
+
+        const ciudadesPredefinidas = {
+            'Jiloyork': [19.916012, -99.580580],
+            'Toluca': [19.289165, -99.655697],
+            'Atlacomulco': [19.799520, -99.873844],
+            'Guadalajara': [20.677754, -103.346254],
+            'Monterrey': [25.691611, -100.321838],
+            'QuintanaRoo': [21.163112, -86.802315],
+            'Michoacan': [19.701400, -101.208297],
+            'Aguascalientes': [21.876410, -102.264387],
+            'CDMX': [19.432713, -99.133183],
+            'QRO': [20.597194, -100.386670]
+        };
+
+        function cargarCoordenadas() {
+            const seleccion = document.getElementById("ciudad_predefinida").value;
+            if (ciudadesPredefinidas[seleccion]) {
+                document.getElementById("nombre").value = seleccion;
+                document.getElementById("lat").value = ciudadesPredefinidas[seleccion][0];
+                document.getElementById("lon").value = ciudadesPredefinidas[seleccion][1];
+            }
+        }
+
+        function agregarCiudad() {
+            const nombre = document.getElementById("nombre").value.trim();
+            const lat = parseFloat(document.getElementById("lat").value);
+            const lon = parseFloat(document.getElementById("lon").value);
+
+            if (!nombre || isNaN(lat) || isNaN(lon)) {
+                alert("Por favor ingresa nombre y coordenadas válidas.");
+                return;
+            }
+
+            if (ciudades[nombre]) {
+                alert("Esa ciudad ya fue agregada.");
+                return;
+            }
+
+            ciudades[nombre] = [lat, lon];
+
+            const lista = document.getElementById("lista");
+            const item = document.createElement("li");
+            item.textContent = `${nombre}: (${lat}, ${lon})`;
+            lista.appendChild(item);
+
+            document.getElementById("nombre").value = "";
+            document.getElementById("lat").value = "";
+            document.getElementById("lon").value = "";
+        }
+
+        function calcularRuta() {
+            if (Object.keys(ciudades).length < 2) {
+                alert("Debes agregar al menos 2 ciudades.");
+                return;
+            }
+
+            fetch("/tsp", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ coord: ciudades })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) {
+                    document.getElementById("resultado").innerText = data.error;
+                } else {
+                    document.getElementById("resultado").innerHTML = `
+                        <p><strong>Ruta:</strong> ${data.ruta.join(" → ")}</p>
+                        <p><strong>Distancia Total:</strong> ${data.distancia_total}</p>
+                    `;
+                }
+            });
+        }
+    </script>
+</body>
+</html>
