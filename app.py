@@ -62,7 +62,7 @@ def tsp():
     ruta, distancia_total = i_hill_climbing(coord)
     return jsonify({"ruta": ruta, "distancia_total": round(distancia_total, 4)})
 
-if _name_ == '_main_':
+if __name__ == '__main_':
     # Obtener el puerto desde la variable de entorno, si no está presente usar el puerto 5000
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
